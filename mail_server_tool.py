@@ -1,7 +1,7 @@
 import asyncore
-import os
 import string
 import random
+import os
 from datetime import datetime
 from smtpd import SMTPServer
 from config import HOST, PORT, MESSAGE_DIR
@@ -24,7 +24,6 @@ class TestMailServer(SMTPServer):
         f = open(MESSAGE_DIR + '/' + filename, 'w')
         f.write(str(data))
         f.close()
-        print(str(self.count) + ": " + str(data))
 
 
 def rand_str(length=6):
@@ -37,11 +36,11 @@ def rand_str(length=6):
 
 def run_server(host, port):
     # Start the SMTP server on host:port
-    print("Server started ...")
+    os.makedirs(MESSAGE_DIR, exist_ok=True)  # Make directory if it does not exist
     TestMailServer((host, port), None)
     asyncore.loop()
 
 
 if __name__ == '__main__':
-    os.makedirs(MESSAGE_DIR, exist_ok=True)  # Make directory if it does not exist
+    print("Server started ...")
     run_server(HOST, PORT)

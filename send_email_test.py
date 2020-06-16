@@ -5,15 +5,16 @@ from config import HOST, PORT
 from enum import Enum
 
 
-def email_worker(num_emails, worker, mode):
+def email_worker(num_emails, worker, mode, port):
     """
     An instance of an email worker to processing sending a test email.
     :param num_emails: Number of enails to send.
     :param worker: Worker number.
     :param mode: Singlethreaded or multuthreaded.
+    :param port: Port to listen on.
     :return:
     """
-    server = smtplib.SMTP(HOST, PORT)
+    server = smtplib.SMTP(HOST, port)
 
     for i in range(num_emails):
 
@@ -34,25 +35,26 @@ def email_worker(num_emails, worker, mode):
 
 class EmailSender:
 
-    @staticmethod
-    def send_single_threaded_test(num_emails=1):
+    def __init__(self, port):
+        self.port = port
+
+    def send_single_threaded_test(self, num_emails=1):
         """
         Sends *num_emails* amount of emails using a single thread.
         """
-        email_worker(num_emails, 1, Mode.SINGLETHREAD)
+        email_worker(num_emails, 1, Mode.SINGLETHREAD, self.port)
 
-    @staticmethod
-    def send_multi_threaded_test(num_emails=1, num_threads=1):
+    def send_multi_threaded_test(self, num_emails=1, num_threads=1):
         """
         Sends *num_emails* amount of emails by dividing workload across *num_threads* workers.
         """
         num_to_send = num_emails // num_threads
 
         for i in range(0, num_threads - 1):
-            p = multiprocessing.Process(target=email_worker, args=(num_to_send, i + 1, Mode.MULTITHREAD))
+            p = multiprocessing.Process(target=email_worker, args=(num_to_send, i + 1, Mode.MULTITHREAD, self.port))
             p.start()
         remaining = num_to_send + (num_emails % num_threads)
-        p = multiprocessing.Process(target=email_worker, args=(remaining, num_threads, Mode.MULTITHREAD))
+        p = multiprocessing.Process(target=email_worker, args=(remaining, num_threads, Mode.MULTITHREAD, self.port))
         p.start()
 
 
@@ -62,6 +64,6 @@ class Mode(Enum):
 
 
 if __name__ == '__main__':
-    emailSender = EmailSender()
+    emailSender = EmailSender(port=PORT)
     emailSender.send_single_threaded_test(num_emails=50)
     emailSender.send_multi_threaded_test(num_emails=50, num_threads=4)
